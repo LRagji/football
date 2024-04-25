@@ -1,0 +1,894 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Settings Preference",
+        "description": "API for platform settings preference",
+        "termsOfService": "http://localhost:3000/terms-of-use",
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "Types"
+        }
+    ],
+    "servers": [
+        {
+            "url": "/platform-settings-preference-svc",
+            "description": "Settings Preference server"
+        },
+        {
+            "url": "http://localhost:3000",
+            "description": "Settings Preference server local"
+        }
+    ],
+    "paths": {
+        "/v2/settings/types/": {
+            "get": {
+                "summary": "Returns all setting type definitions or filtered them by multiple tags.",
+                "tags": [
+                    "Types"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "tags",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "types are fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/getTypes"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/getEmptyTypes"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "207": {
+                        "description": "It returns data aswell as error when some tags are valid & some are not.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/getMultiStatusSpecialChar"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/getMultiStatusCharLength"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/getMultiStatusMaxTag"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "It returns a corresponding validation error if tag or tags are not valid.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/getErr400"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unhandled exception occured.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/unhandledException"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/settings/types/{typeId}": {
+            "get": {
+                "summary": "Returns setting type definition for given typeId.",
+                "tags": [
+                    "Types"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "typeId",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true,
+                        "description": "Numeric unique typeId for setting to get setting value"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "types are fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/getTypes"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/getEmptyTypes"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "It returns a corresponding validation error if any parameter is not valid.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/components/schemas/getSettingByInvalidTypeError400"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/getErr400"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unhandled exception occured.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/unhandledException"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/settings/instances/search": {
+            "post": {
+                "summary": "Search instance endpoint. It is used to search instances based on filters provided",
+                "tags": [
+                    "Instances"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "description": "There are 3 parameters. tags, typeId and qualifierId. All of thrre are optional. Request body can be empty",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InstanceSearchRequest"
+                            },
+                            "example": {
+                                "tags": [
+                                    "tag1",
+                                    "tag12",
+                                    "tag3"
+                                ],
+                                "typeId": "all",
+                                "qualifierId": "01"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Instances search successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InstanceSearchResponse"
+                                    }
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "qualifierId": "01",
+                                            "typeId": 1,
+                                            "value": {
+                                                "theme": "dark"
+                                            }
+                                        },
+                                        {
+                                            "qualifierId": "01",
+                                            "typeId": 2,
+                                            "value": {
+                                                "view": "view1"
+                                            }
+                                        }
+                                    ],
+                                    "apistatus": 0
+                                }
+                            }
+                        }
+                    },
+                    "207": {
+                        "description": "It indicates that there were some invalid search parameters were provided ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InstanceSearchResponseWithError"
+                                    }
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "qualifierId": "01",
+                                            "typeId": 1,
+                                            "value": {
+                                                "theme": "dark"
+                                            }
+                                        },
+                                        {
+                                            "qualifierId": "01",
+                                            "typeId": 2,
+                                            "value": {
+                                                "view": "view1"
+                                            }
+                                        }
+                                    ],
+                                    "err": [
+                                        {
+                                            "errcode": 4,
+                                            "errmsg": "qualifier_id should be alphnumeric string :  "
+                                        }
+                                    ],
+                                    "apistatus": 0
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The request body contains some bad parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "apistatus": -1,
+                                    "err": [
+                                        {
+                                            "errcode": 4,
+                                            "errmsg": "qualifier_id should be alphnumeric string :  "
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "It returns the corresponding error if server encounters an unexpected condition which prevented it from fulfilling the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/settings/instances/qualifiers/{qId}/type/{typeId}": {
+            "put": {
+                "summary": "Upsert instance endpoint. It is used to upsert instance based on qualifierId and typeId provided",
+                "tags": [
+                    "Instances"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "qId",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "QualifierId as identifier to upsert instance value",
+                        "example": "qid1"
+                    },
+                    {
+                        "in": "path",
+                        "name": "typeId",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true,
+                        "description": "TypeId as identifier to upsert instance value",
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "description": "There is 1 parameter - value, which is mandatory field. Request body can be empty.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InstanceUpsertRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Instances upsert successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InstanceSearchResponse"
+                                    }
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "qualifierId": "qid1",
+                                            "typeId": 1,
+                                            "value": {
+                                                "theme": "dark"
+                                            }
+                                        }
+                                    ],
+                                    "apistatus": 0
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The request body contains some bad parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "apistatus": -1,
+                                    "err": [
+                                        {
+                                            "errcode": 4,
+                                            "errmsg": "qId should be alphnumeric string :  "
+                                        },
+                                        {
+                                            "errcode": 1200,
+                                            "errmsg": "Invalid TypeId, Please enter a valid typeId as integer between a range from 1 to 2147483647."
+                                        },
+                                        {
+                                            "errcode": 8,
+                                            "errmsg": "qualifierId contains special characters : "
+                                        },
+                                        {
+                                            "errcode": 11,
+                                            "errmsg": "Object Key Either contain special character OR Key length exceeded expected length i.e 100"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "It returns the corresponding error if server encounters an unexpected condition which prevented it from fulfilling the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "apistatus": -2,
+                                    "err": [
+                                        {
+                                            "errcode": 10,
+                                            "errmsg": "Unhandled exception occured, please retry your request."
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "summary": "Get instance endpoint. It is used to upsert instance based on qualifierId and typeId provided",
+                "tags": [
+                    "Instances"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "qId",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "QualifierId as identifier to upsert instance value",
+                        "example": "qid1"
+                    },
+                    {
+                        "in": "path",
+                        "name": "typeId",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true,
+                        "description": "TypeId as identifier to upsert instance value",
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instances upsert successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/InstanceSearchResponse"
+                                    }
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "qualifierId": "qid1",
+                                            "typeId": 1,
+                                            "value": {
+                                                "theme": "dark"
+                                            }
+                                        }
+                                    ],
+                                    "apistatus": 0
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The request body contains some bad parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "apistatus": -1,
+                                    "err": [
+                                        {
+                                            "errcode": 4,
+                                            "errmsg": "qId should be alphnumeric string :  "
+                                        },
+                                        {
+                                            "errcode": 1200,
+                                            "errmsg": "Invalid TypeId, Please enter a valid integer value between a range from 1 to 2147483647."
+                                        },
+                                        {
+                                            "errcode": 8,
+                                            "errmsg": "qualifierId contains special characters : "
+                                        },
+                                        {
+                                            "errcode": 11,
+                                            "errmsg": "Object Key Either contain special character OR Key length exceeded expected length i.e 100"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "It returns the corresponding error if server encounters an unexpected condition which prevented it from fulfilling the request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "apistatus": -2,
+                                    "err": [
+                                        {
+                                            "errcode": 10,
+                                            "errmsg": "Unhandled exception occured, please retry your request."
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "getTypes": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "API Status of response Get Types."
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/dataObject"
+                        }
+                    }
+                }
+            },
+            "getEmptyTypes": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "API Status of response Get Types.",
+                        "example": 1
+                    },
+                    "data": {
+                        "example": []
+                    }
+                }
+            },
+            "getErr400": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "API Status of response Get Types.",
+                        "example": -1
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/errorObject400"
+                        }
+                    }
+                }
+            },
+            "getSettingByInvalidTypeError400": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "API Status of response Get Types.",
+                        "example": -1
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/errorInvalidTypeIdObject400"
+                        }
+                    }
+                }
+            },
+            "getMultiStatusSpecialChar": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "Multi-Status response of Get Types."
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/errorObjectSpecialChar"
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/dataObject"
+                        }
+                    }
+                }
+            },
+            "getMultiStatusMaxTag": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "Multi-Status response of Get Types."
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/errorObjectMaxTag"
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/dataObject"
+                        }
+                    }
+                }
+            },
+            "getMultiStatusCharLength": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "Multi-Status response of Get Types."
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/errorObjectMaxCharLength"
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/dataObject"
+                        }
+                    }
+                }
+            },
+            "unhandledException": {
+                "type": "object",
+                "properties": {
+                    "apistatus": {
+                        "type": "integer",
+                        "description": "API Status of response Get Types.",
+                        "example": -2
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {},
+                        "example": [
+                            {
+                                "errCode": 10,
+                                "errmsg": "Unhandled exception occured, please retry your request"
+                            }
+                        ]
+                    }
+                }
+            },
+            "dataObject": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Theme"
+                    },
+                    "default": {
+                        "type": "object",
+                        "properties": {
+                            "value": {
+                                "type": "string",
+                                "example": "light"
+                            }
+                        }
+                    },
+                    "meta": {
+                        "type": "object",
+                        "properties": {
+                            "options": {
+                                "example": [
+                                    "dark",
+                                    "light",
+                                    "system"
+                                ]
+                            }
+                        }
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {},
+                        "example": [
+                            "AHM",
+                            "VLM"
+                        ]
+                    }
+                }
+            },
+            "errorObject400": {
+                "properties": {
+                    "errCode": {
+                        "type": "integer",
+                        "example": 1000
+                    },
+                    "errmsg": {
+                        "type": "string",
+                        "example": "Internal error occured!"
+                    }
+                }
+            },
+            "errorInvalidTypeIdObject400": {
+                "properties": {
+                    "errCode": {
+                        "type": "integer",
+                        "example": 1200
+                    },
+                    "errmsg": {
+                        "type": "string",
+                        "example": "Invalid TypeId!"
+                    }
+                }
+            },
+            "errorObjectSpecialChar": {
+                "properties": {
+                    "errCode": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "errmsg": {
+                        "type": "string",
+                        "example": "Tag contains special characters: 1@"
+                    }
+                }
+            },
+            "errorObjectMaxTag": {
+                "properties": {
+                    "errCode": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "errmsg": {
+                        "type": "string",
+                        "example": "No of tags cannot be more than 10, currently : 11"
+                    }
+                }
+            },
+            "errorObjectMaxCharLength": {
+                "properties": {
+                    "errCode": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "errmsg": {
+                        "type": "string",
+                        "example": "Tag length exceeded expected length of 100, fxpokmqsbpfosszweejfvlukqekzkmfltsfdxtdvavlirlikgodpetphqvcvrmjwxkprhpxfgffwzqvhlhqqwtwfcnpwpzelpbzlp: 101"
+                    }
+                }
+            },
+            "Error": {
+                "properties": {
+                    "apistatus": {
+                        "type": "integer"
+                    },
+                    "err": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ErrorObject"
+                        }
+                    }
+                }
+            },
+            "ErrorObject": {
+                "properties": {
+                    "errcode": {
+                        "type": "integer"
+                    },
+                    "errmsg": {
+                        "type": "string"
+                    }
+                }
+            },
+            "InstanceSearchRequest": {
+                "properties": {
+                    "tags": {
+                        "type": "array"
+                    },
+                    "typeId": {
+                        "type": "string"
+                    },
+                    "qualifierId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "InstanceUpsertRequest": {
+                "properties": {
+                    "value": {
+                        "type": "object",
+                        "properties": {
+                            "theme": {
+                                "type": "string",
+                                "example": "dark"
+                            }
+                        }
+                    }
+                }
+            },
+            "InstanceSearchResponse": {
+                "properties": {
+                    "apistatus": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InstanceObject"
+                        }
+                    }
+                }
+            },
+            "InstanceSearchResponseWithError": {
+                "properties": {
+                    "apistatus": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InstanceObject"
+                        }
+                    },
+                    "err": {
+                        "type": "array"
+                    }
+                }
+            },
+            "InstanceObject": {
+                "properties": {
+                    "typeId": {
+                        "type": "integer"
+                    },
+                    "qualifierId": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
+}
