@@ -1,9 +1,9 @@
-import { CachedProxy } from "../services/cached-proxy";
+import { StandingsService } from "../services/standings-service";
 import { Request, Response } from "express";
 
 export class StandingsController {
 
-    constructor(private readonly service: CachedProxy) { }
+    constructor(private readonly service: StandingsService) { }
 
     public async fetchStandings(req: Request, res: Response): Promise<void> {
 
@@ -15,15 +15,17 @@ export class StandingsController {
             .map(p => p.substring(filterPrefix.length));
 
         if (filters.length > 0) {
-            data = data.filter(obj => filters.some((propKey) => obj[propKey] === req.query[propKey]) !== null);
+            data = data.filter(obj => filters.some((propKey) => obj[propKey] === req.query[filterPrefix + propKey]));
         }
 
-        const offset = Number(req.query?.offset || '0');
-        const limit = Number(req.query?.limit || '100');
+        const offset = Math.round(Math.abs(Number(req.query?.offset || '0')));
+        const limit = Math.round(Math.abs(Number(req.query?.limit || '100')));
 
         const page = data.slice(offset, offset + limit);
 
-        res.sendStatus((offset + limit) - 1 < data.length ? 206 : 200)
+        res.set('Cache-Control', 'public, max-age=3600'); // 1 hour
+
+        res.status((offset + limit) < data.length ? 206 : 200)
             .send(page);
     }
 }

@@ -7,14 +7,14 @@ export class ApplicationConfig implements IEnvConfig {
     }
 
     public get CacheDuration(): number {
-        return Number(process.env.CacheDuration || 86400 * 1000);
+        return Number(process.env.CACHEDURATION || 86400 * 1000);
     }
 
     public get CacheMaxSize(): number {
-        return Number(process.env.CacheMaxSize || 1000);
+        return Number(process.env.CACHEMAXSIZE || 1000);
     }
 
     public get CachedProperties(): string[] {
-        return JSON.parse(process.env.CachedProperties || '[]') as string[];
+        return JSON.parse(process.env.CACHEDPROPERTIES || '[]') as string[];
     }
 }

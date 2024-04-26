@@ -1,19 +1,20 @@
 import { IEnvConfig } from "../interfaces/i-env-config";
 import { ILogger } from "../interfaces/i-logger";
 import { PerishableData } from "../interfaces/i-perishable-data";
+import { IStandings } from "../interfaces/i-standings";
 import { TypedKeyValueRepo } from "../interfaces/i-typed-key-value-repo";
 
-export class CachedProxy {
+export class StandingsService {
 
-    private activeCallWatchdog: Promise<object[]> | undefined;
+    private activeCallWatchdog: Promise<IStandings[]> | undefined;
 
     constructor(
         private readonly logger: ILogger,
         private readonly appConfig: IEnvConfig,
-        private readonly cache: TypedKeyValueRepo<PerishableData<object[]>>) {
+        private readonly cache: TypedKeyValueRepo<PerishableData<IStandings[]>>) {
     }
 
-    public async fetchStandings(cacheKey = 'standings'): Promise<object[]> {
+    public async fetchStandings(cacheKey = 'standings'): Promise<IStandings[]> {
         const cachedData = await this.cache.get(cacheKey);
         if (cachedData !== undefined && (Date.now() - cachedData.expiry) < this.appConfig.CacheDuration) {
             this.logger.debug(`Cache hit for ${cacheKey}`);
@@ -33,9 +34,9 @@ export class CachedProxy {
         return data;
     }
 
-    private async fetchData(): Promise<object[]> {
+    private async fetchData(): Promise<IStandings[]> {
         this.logger.debug('Fetching data');
-        return new Promise<object[]>((resolve) => {
+        return new Promise<IStandings[]>((resolve) => {
             setTimeout(() => {
                 resolve(
                     [
