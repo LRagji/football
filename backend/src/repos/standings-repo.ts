@@ -29,10 +29,6 @@ export class StandingsRepo {
         try {
             response = await apiCall;
         }
-        catch (err) {
-            this.logger.error(`Fetch Error`, err);
-            response = new Response();
-        }
         finally {
             this.apiWatchdogs.delete(action);
         }
