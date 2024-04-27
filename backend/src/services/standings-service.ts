@@ -1,124 +1,86 @@
+import { IndexedTable } from "../ds/indexed-table";
+import { ICellValue } from "../interfaces/i-cell-value";
 import { IEnvConfig } from "../interfaces/i-env-config";
 import { ILogger } from "../interfaces/i-logger";
-import { PerishableData } from "../interfaces/i-perishable-data";
-import { IStandings } from "../interfaces/i-standings";
-import { TypedKeyValueRepo } from "../interfaces/i-typed-key-value-repo";
+import { IStandingRecord } from "../interfaces/i-standing-record";
+import { MCountry } from "../models/m-country";
+import { MLeague } from "../models/m-league";
+import { MStandings } from "../models/m-standings";
+import { MTeam } from "../models/m-team";
+import { StandingsRepo } from "../repos/standings-repo";
 
 export class StandingsService {
 
-    private activeCallWatchdog: Promise<IStandings[]> | undefined;
+    private lastUpdated: number = 0;
+    private readonly standingsTable = new IndexedTable([0, 1, 2]);//countryName,leagueName,teamName
 
     constructor(
         private readonly logger: ILogger,
         private readonly appConfig: IEnvConfig,
-        private readonly cache: TypedKeyValueRepo<PerishableData<IStandings[]>>) {
+        private readonly repo: StandingsRepo) {
     }
 
-    public async fetchStandings(cacheKey = 'standings'): Promise<IStandings[]> {
-        const cachedData = await this.cache.get(cacheKey);
-        if (cachedData !== undefined && (Date.now() - cachedData.expiry) < this.appConfig.CacheDuration) {
-            this.logger.debug(`Cache hit for ${cacheKey}`);
-            return cachedData.data;
-        }
-
-        this.logger.debug(`Cache miss for ${cacheKey}`);
-
-        if (this.activeCallWatchdog === undefined) {
-            this.logger.debug(`Initiating a new call`);
-            this.activeCallWatchdog = this.fetchData();
-        }
-
-        const data = await this.activeCallWatchdog;
-        await this.cache.set(cacheKey, { data: data, expiry: Date.now() });
-        this.activeCallWatchdog = undefined;
-        return data;
+    public async getStandingsByCountryName(countryName: string): Promise<IStandingRecord[]> {
+        return this.queryByIndex(0, countryName);
+    }
+    public async getStandingsByLeaugeName(leagueName: string): Promise<IStandingRecord[]> {
+        return this.queryByIndex(1, leagueName);
+    }
+    public async getStandingsByTeamName(teamName: string): Promise<IStandingRecord[]> {
+        return this.queryByIndex(2, teamName);
+    }
+    public async getAllStandings(): Promise<IStandingRecord[]> {
+        if ((Date.now() - this.lastUpdated) > this.appConfig.CacheDuration) await this.fillDataContainer();
+        return Array.from(this.standingsTable.getAll().values())
+            .map((props) => {
+                return this.rowTransform(props);
+            });
     }
 
-    private async fetchData(): Promise<IStandings[]> {
-        this.logger.debug('Fetching data');
-        return new Promise<IStandings[]>((resolve) => {
-            setTimeout(() => {
-                resolve(
-                    [
-                        {
-                            "country_name": "England",
-                            "league_id": "152",
-                            "league_name": "Premier League",
-                            "team_id": "141",
-                            "team_name": "Arsenal",
-                            "overall_promotion": "Promotion - Champions League (Group Stage: )",
-                            "overall_league_position": "1",
-                            "overall_league_payed": "0",
-                            "overall_league_W": "0",
-                            "overall_league_D": "0",
-                            "overall_league_L": "0",
-                            "overall_league_GF": "0",
-                            "overall_league_GA": "0",
-                            "overall_league_PTS": "0",
-                            "home_league_position": "1",
-                            "home_promotion": "",
-                            "home_league_payed": "0",
-                            "home_league_W": "0",
-                            "home_league_D": "0",
-                            "home_league_L": "0",
-                            "home_league_GF": "0",
-                            "home_league_GA": "0",
-                            "home_league_PTS": "0",
-                            "away_league_position": "1",
-                            "away_promotion": "",
-                            "away_league_payed": "0",
-                            "away_league_W": "0",
-                            "away_league_D": "0",
-                            "away_league_L": "0",
-                            "away_league_GF": "0",
-                            "away_league_GA": "0",
-                            "away_league_PTS": "0",
-                            "league_round": "",
-                            "team_badge": "https://apiv3.apifootball.com/badges/141_arsenal.jpg",
-                            "fk_stage_key": "6",
-                            "stage_name": "Current"
-                        },
-                        {
-                            "country_name": "England",
-                            "league_id": "152",
-                            "league_name": "Premier League",
-                            "team_id": "3088",
-                            "team_name": "Aston Villa",
-                            "overall_promotion": "Promotion - Champions League (Group Stage: )",
-                            "overall_league_position": "2",
-                            "overall_league_payed": "0",
-                            "overall_league_W": "0",
-                            "overall_league_D": "0",
-                            "overall_league_L": "0",
-                            "overall_league_GF": "0",
-                            "overall_league_GA": "0",
-                            "overall_league_PTS": "0",
-                            "home_league_position": "2",
-                            "home_promotion": "",
-                            "home_league_payed": "0",
-                            "home_league_W": "0",
-                            "home_league_D": "0",
-                            "home_league_L": "0",
-                            "home_league_GF": "0",
-                            "home_league_GA": "0",
-                            "home_league_PTS": "0",
-                            "away_league_position": "2",
-                            "away_promotion": "",
-                            "away_league_payed": "0",
-                            "away_league_W": "0",
-                            "away_league_D": "0",
-                            "away_league_L": "0",
-                            "away_league_GF": "0",
-                            "away_league_GA": "0",
-                            "away_league_PTS": "0",
-                            "league_round": "",
-                            "team_badge": "https://apiv3.apifootball.com/badges/3088_aston-villa.jpg",
-                            "fk_stage_key": "6",
-                            "stage_name": "Current"
+    private async queryByIndex(indexCol: number, indexKey: string): Promise<IStandingRecord[]> {
+        if ((Date.now() - this.lastUpdated) > this.appConfig.CacheDuration) await this.fillDataContainer();
+        return Array.from(this.standingsTable.getByIndex(indexCol, indexKey) || [])
+            .map((rowId) => {
+                const props = (this.standingsTable.get(rowId) || []);
+                return this.rowTransform(props);
+            });
+    }
+
+    private rowTransform(props: ICellValue[]): IStandingRecord {
+        return {
+            countryID: props[0]?.Data.countryID || "",
+            leagueID: props[1]?.Data.leagueID || "",
+            teamID: props[2]?.Data.teamID || "",
+            countryName: props[0]?.IndexKey || "",
+            leagueName: props[1]?.IndexKey || "",
+            teamName: props[2]?.IndexKey || "",
+            overallLeaguePosition: props[3]?.IndexKey || ""
+        }
+    }
+
+    private async fillDataContainer(): Promise<void> {
+        const countries = await this.repo.fetchData<MCountry>(`get_countries`);
+        for (const country of countries) {
+            const leagues = await this.repo.fetchData<MLeague>(`get_leagues`, `country_id`, country.countryID);
+            for (const league of leagues) {
+                const teams = await this.repo.fetchData<MTeam>(`get_teams`, `league_id`, league.leagueID);
+                const standings = await this.repo.fetchData<MStandings>(`get_standings`, `league_id`, league.leagueID);
+
+                for (const standing of standings) {
+                    for (const team of teams) {
+                        if (team.teamID === standing.teamID) {
+                            this.standingsTable.upsert([
+                                { IndexKey: country.countryName, Data: country },
+                                { IndexKey: league.leagueName, Data: league },
+                                { IndexKey: team.teamName, Data: team },
+                                { IndexKey: standing.overallLeaguePosition, Data: standing }
+                            ]);
                         }
-                    ]
-                );
-            }, 2000);
-        });
+                    }
+                }
+
+            }
+        }
+        this.lastUpdated = Date.now();
     }
 }

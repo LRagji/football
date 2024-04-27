@@ -10,11 +10,11 @@ export class ApplicationConfig implements IEnvConfig {
         return Number(process.env.CACHEDURATION || 86400 * 1000);
     }
 
-    public get CacheMaxSize(): number {
-        return Number(process.env.CACHEMAXSIZE || 1000);
+    public get UpstreamAPI(): string {
+        return process.env.UPSTREAMAPI || "https://apiv3.apifootball.com/";
     }
 
-    public get CachedProperties(): string[] {
-        return JSON.parse(process.env.CACHEDPROPERTIES || '[]') as string[];
+    public get UpstreamAPIKey(): string {
+        return process.env.UPSTREAMAPIKEY || "";
     }
 }

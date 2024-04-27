@@ -5,20 +5,18 @@ import * as swaggerUi from "swagger-ui-express";
 import * as swaggerDocument from './swagger.json';
 import { ApplicationConfig } from './configs/application-config';
 import { ConsoleLogger } from './configs/console-logger';
-import { InMemoryTypedCache } from './repos/in-memory-typed-cache';
 import { StandingsController } from './controllers/standings-controller';
 import { StandingsService } from './services/standings-service';
-import { PerishableData } from './interfaces/i-perishable-data';
 import { StandingsRoute } from './routes/standings-route';
-import { IStandings } from './interfaces/i-standings';
+import { StandingsRepo } from './repos/standings-repo';
 
 const app: express.Express = express();
 const appConfig = new ApplicationConfig();
 const appLogger = new ConsoleLogger();
 
-const inMemoryRepo = new InMemoryTypedCache<PerishableData<IStandings[]>>();
-const service = new StandingsService(appLogger, appConfig, inMemoryRepo);
-const controller = new StandingsController(service);
+const repo = new StandingsRepo(appConfig);
+const service = new StandingsService(appLogger, appConfig, repo);
+const controller = new StandingsController(service, appConfig);
 const route = new StandingsRoute(app, appLogger, controller);
 
 app.use(helmet());
