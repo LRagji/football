@@ -24,15 +24,19 @@ export class StandingsRepo {
             apiCall = fetch(upstreamUrl);
             this.apiWatchdogs.set(action, apiCall);
         }
-
-        const response = await apiCall;
-        this.apiWatchdogs.delete(action);
+        let response: Response;
+        try {
+            response = await apiCall;
+        }
+        finally {
+            this.apiWatchdogs.delete(action);
+        }
 
         if (response.ok === false) {
             throw new Error(`Failed to fetch data from Upstream API(${action}) return status:${response.status}`);
         }
 
-        const data = await response.json() as Record<string, string>[] | Record<string, string>;
+        let data = await response.json() as Record<string, string>[] | Record<string, string>;
         if (!Array.isArray(data)) {
             throw new Error(`Failed to fetch data from Upstream API(${action}): ${data["message"]}`);
         }

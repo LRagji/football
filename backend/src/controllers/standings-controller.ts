@@ -1,4 +1,5 @@
 import { IEnvConfig } from "../interfaces/i-env-config";
+import { IStandingRecord } from "../interfaces/i-standing-record";
 import { StandingsService } from "../services/standings-service";
 import { Request, Response } from "express";
 
@@ -8,16 +9,25 @@ export class StandingsController {
 
     public async fetchStandings(req: Request, res: Response): Promise<void> {
 
-        const filterPrefix = `f-`;
-        let data = await this.service.getAllStandings();
+        const filterCountryName = req.query['countryName'];
+        const filterLeagueName = req.query['leagueName'];
+        const filterTeamName = req.query['teamName'];
+        let data: IStandingRecord[];
 
-        // const filters = Object.keys(req.query)
-        //     .filter(p => p.startsWith(filterPrefix))
-        //     .map(p => p.substring(filterPrefix.length));
-
-        // if (filters.length > 0) {
-        //     data = data.filter(obj => filters.some((propKey) => obj[propKey] === req.query[filterPrefix + propKey]));
-        // }
+        if (filterCountryName === undefined && filterLeagueName === undefined && filterTeamName === undefined) {
+            data = await this.service.getAllStandings();
+        }
+        else if (filterCountryName !== undefined) {
+            data = await this.service.getStandingsByCountryName(filterCountryName as string);
+        } else if (filterLeagueName !== undefined) {
+            data = await this.service.getStandingsByLeaugeName(filterLeagueName as string);
+        } else if (filterTeamName !== undefined) {
+            data = await this.service.getStandingsByTeamName(filterTeamName as string);
+        }
+        else {
+            res.status(400).send('Invalid or missing query parameters');
+            return;
+        }
 
         const offset = Math.round(Math.abs(Number(req.query?.offset || '0')));
         const limit = Math.round(Math.abs(Number(req.query?.limit || '100')));
