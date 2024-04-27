@@ -14,7 +14,7 @@ const app: express.Express = express();
 const appConfig = new ApplicationConfig();
 const appLogger = new ConsoleLogger();
 
-const repo = new StandingsRepo(appConfig);
+const repo = new StandingsRepo(appConfig, appLogger);
 const service = new StandingsService(appLogger, appConfig, repo);
 const controller = new StandingsController(service, appConfig);
 const route = new StandingsRoute(app, appLogger, controller);

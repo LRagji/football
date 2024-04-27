@@ -1,4 +1,5 @@
 import { IEnvConfig } from "../interfaces/i-env-config";
+import { ILogger } from "../interfaces/i-logger";
 import { MCountry } from "../models/m-country";
 import { MLeague } from "../models/m-league";
 import { MStandings } from "../models/m-standings";
@@ -8,7 +9,7 @@ export class StandingsRepo {
 
     private readonly apiWatchdogs = new Map<string, Promise<Response>>();
 
-    constructor(private readonly appConfig: IEnvConfig) { }
+    constructor(private readonly appConfig: IEnvConfig, private readonly logger: ILogger) { }
 
     public async fetchData<T extends MTeam | MLeague | MCountry | MStandings>(action: string, actionParamName?: string, actionParamValue?: string): Promise<T[]> {
 
@@ -28,17 +29,28 @@ export class StandingsRepo {
         try {
             response = await apiCall;
         }
+        catch (err) {
+            this.logger.error(`Fetch Error`, err);
+            response = new Response();
+        }
         finally {
             this.apiWatchdogs.delete(action);
         }
 
         if (response.ok === false) {
-            throw new Error(`Failed to fetch data from Upstream API(${action}) return status:${response.status}`);
+            const msg = `Failed to fetch data from Upstream API(${action}) return status:${response.status}`;
+            this.logger.debug(msg);
+            //throw new Error(msg);
+            response.json = () => Promise.resolve([]);
         }
 
         let data = await response.json() as Record<string, string>[] | Record<string, string>;
         if (!Array.isArray(data)) {
-            throw new Error(`Failed to fetch data from Upstream API(${action}): ${data["message"]}`);
+            const msg = `Failed to fetch data from Upstream API(${action}): ${data["message"]}`;
+            this.logger.debug(msg);
+            //throw new Error(msg);
+            data = [];
+
         }
 
         return data.map((row) => {
