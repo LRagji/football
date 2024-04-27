@@ -5,19 +5,23 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: football-frontend:local
     ports:
       - "80:80"
     environment:
       - UPSTREAM_SERVER=http://backend:3000
+    volumes:
+      - ./frontend/src:/usr/share/nginx/html
     depends_on:
       - backend
     networks:
       - internal
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
+    image: football-backend:local
     ports:
       - "3000:3000"
     environment:
@@ -25,7 +29,7 @@ services:
       - APPLICATION_PORT=3000
       - CACHEDURATION=86400000
       - UPSTREAMAPI=https://apiv3.apifootball.com/
-      - UPSTREAMAPIKEY=9bb66184e0c8145384fd2cc0f7b914ada57b4e8fd2e4d6d586adcc27c257a9780
+      - UPSTREAMAPIKEY=9bb66184e0c8145384fd2cc0f7b914ada57b4e8fd2e4d6d586adcc27c257a978
       - NODE_TLS_REJECT_UNAUTHORIZED=0
     networks:
       - internal
