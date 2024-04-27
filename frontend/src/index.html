@@ -2,137 +2,210 @@
 <html>
 
 <head>
-    <title>Football Data</title>
+    <title>Teams Standings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-            font-size: 24px;
+        * {
+            box-sizing: border-box;
+        }
+
+        .searchbox {
+            background-image: url('/assets/searchicon.png');
+            background-position: 10px 10px;
+            background-repeat: no-repeat;
+            width: 100%;
+            font-size: 16px;
+            padding: 12px 20px 12px 40px;
+            border: 1px solid #ddd;
+            margin-bottom: 12px;
+        }
+
+        #myTable {
+            border-collapse: collapse;
+            width: 95%;
+            border: 1px solid #ddd;
+            font-size: 18px;
+            margin-left: 2.5%;
+        }
+
+        #myTable th,
+        #myTable td {
+            text-align: left;
+            padding: 12px;
+        }
+
+        #myTable tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        #myTable tr.header,
+        #myTable tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        #loader {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 1;
+            width: 120px;
+            height: 120px;
+            margin: -76px 0 0 -76px;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Add animation to "page content" */
+        .animate-bottom {
+            position: relative;
+            -webkit-animation-name: animatebottom;
+            -webkit-animation-duration: 1s;
+            animation-name: animatebottom;
+            animation-duration: 1s
+        }
+
+        @-webkit-keyframes animatebottom {
+            from {
+                bottom: -100px;
+                opacity: 0
+            }
+
+            to {
+                bottom: 0px;
+                opacity: 1
+            }
+        }
+
+        @keyframes animatebottom {
+            from {
+                bottom: -100px;
+                opacity: 0
+            }
+
+            to {
+                bottom: 0;
+                opacity: 1
+            }
+        }
+
+        #myDiv {
+            display: none;
+            text-align: center;
         }
     </style>
 </head>
 
-<body>
-    <h1>Football Data</h1>
+<body onload="fetchData()" style="margin:0;">
 
-    <div>
-        <label>
-            <input type="radio" name="onlineOffline" value="online" checked> Online
-        </label>
-        <label>
-            <input type="radio" name="onlineOffline" value="offline"> Offline
-        </label>
+    <div id="loader"></div>
+
+    <div style="display:none;" id="myDiv" class="animate-bottom">
+        <h2>Team Standings</h2>
+        <table id="myTable">
+            <thead>
+                <tr class="header">
+                    <th style="width:25%;">Country</th>
+                    <th style="width:25%;">League</th>
+                    <th style="width:25%;">Team</th>
+                    <th style="width:25%;">Position</th>
+                </tr>
+                <tr class="header">
+                    <th style="width:25%;"><input class="searchbox" type="text" id="searchCountry"
+                            onkeyup="search('searchCountry',0)" placeholder="Country Name.."></th>
+                    <th style="width:25%;"><input class="searchbox" type="text" id="searchLeague"
+                            onkeyup="search('searchLeague',1)" placeholder="League Name.."></th>
+                    <th style="width:25%;"> <input class="searchbox" type="text" id="searchTeam"
+                            onkeyup="search('searchTeam',2)" placeholder="Team Name.."></th>
+                    <th style="width:25%;"></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
-    <div>
-        <label for="countryName">Country Name:</label>
-        <input type="text" id="countryName">
-    </div>
-
-    <div>
-        <label for="leagueName">League Name:</label>
-        <input type="text" id="leagueName">
-    </div>
-
-    <div>
-        <label for="teamName">Team Name:</label>
-        <input type="text" id="teamName">
-    </div>
-
-    <button id="searchButton">Search</button>
-
-    <table id="footballTable">
-        <thead>
-            <tr>
-                <th>Country Name</th>
-                <th>Country Id</th>
-                <th>League Name</th>
-                <th>League Id</th>
-                <th>Team Name</th>
-                <th>Team Id</th>
-                <th>Standing</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="loading">
-                <td colspan="3">Loading...</td>
-            </tr>
-        </tbody>
-    </table>
 
     <script>
-        const tableBody = document.querySelector('#footballTable tbody');
-        const loadingRow = document.querySelector('.loading');
-        const searchButton = document.querySelector('#searchButton');
 
-        // Function to fetch data from the API
-        function fetchData() {
-            // Show loading row
-            loadingRow.style.display = 'table-row';
-
-            // Make API request and update table with data
-            // Replace the URL with your actual API endpoint
-            fetch('https://api.example.com/football')
-                .then(response => response.json())
-                .then(data => {
-                    // Clear table body
-                    tableBody.innerHTML = '';
-
-                    // Populate table with data
-                    data.forEach(item => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                  <td>${item.team}</td>
-                  <td>${item.wins}</td>
-                  <td>${item.losses}</td>
-                `;
-                        tableBody.appendChild(row);
-                    });
-
-                    // Hide loading row
-                    loadingRow.style.display = 'none';
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    // Handle error here
-                });
+        async function fetchData() {
+            const apiURL = new URL('/api/v1/standings', document.location);
+            //apiURL.searchParams.append(`limit`, 10);
+            const response = await fetch(apiURL)
+            if (response.ok) {
+                const data = await response.json();
+                populateTable(data);
+                showPage();
+            } else {
+                console.error('Error fetching data:', response.statusText);
+            }
         }
 
-        // Event listener for radio button change
-        const onlineOfflineRadio = document.querySelectorAll('input[name="onlineOffline"]');
-        onlineOfflineRadio.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (radio.value === 'online') {
-                    // Fetch data from API
-                    fetchData();
-                } else {
-                    // Show offline data
-                    // Replace the code below with your offline data handling logic
-                    tableBody.innerHTML = `
-                <tr>
-                  <td>Team A</td>
-                  <td>10</td>
-                  <td>5</td>
-                </tr>
+        function populateTable(data) {
+
+            const newtbody = document.createElement('tbody');
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                  <td aria-description="${item.countryName}" >(${item.countryID})-${item.countryName}</td>
+                  <td aria-description="${item.leagueName}" >(${item.leagueID})-${item.leagueName}</td>
+                  <td aria-description="${item.teamName}" >(${item.teamID})-${item.teamName}</td>
+                  <td>${item.overallLeaguePosition}</td>
                 `;
-                }
+                newtbody.appendChild(row);
             });
-        });
 
-        // Event listener for search button click
-        searchButton.addEventListener('click', () => {
-            const countryName = document.querySelector('#countryName').value;
-            const leagueName = document.querySelector('#leagueName').value;
-            const teamName = document.querySelector('#teamName').value;
+            const table = document.getElementById("myTable");
+            const oldBody = table.getElementsByTagName('tbody')[0];
+            oldBody.parentNode.replaceChild(newtbody, oldBody)
+        }
 
-            // Perform search logic here
-            // Replace the code below with your search logic
-            console.log('Country Name:', countryName);
-            console.log('League Name:', leagueName);
-            console.log('Team Name:', teamName);
-        });
+        function showPage() {
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("myDiv").style.display = "block";
+        }
+
+        function search(elementId, colIndex) {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById(elementId);
+            filter = input.value.toUpperCase();
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[colIndex];
+                if (td) {
+                    txtValue = td.ariaDescription || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
     </script>
+
 </body>
 
 </html>
