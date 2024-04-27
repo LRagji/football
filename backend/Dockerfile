@@ -2,7 +2,7 @@
 
 # Security warning: npmrc can be viewed by docker history command so to avoid this using multi stage build.
 
-FROM ghcr.io/bh-ent-tech/node:20.10.0-alpine AS builder
+FROM node:20.10.0-alpine AS builder
 
 LABEL stage=builder
 
