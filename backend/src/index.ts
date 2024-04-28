@@ -11,7 +11,7 @@ import { StandingsRoute } from './routes/standings-route';
 import { StandingsRepo } from './repos/standings-repo';
 
 const app: express.Express = express();
-const appConfig = new ApplicationConfig();
+const appConfig = new ApplicationConfig(process.env);
 const appLogger = new ConsoleLogger();
 
 const repo = new StandingsRepo(appConfig, appLogger);

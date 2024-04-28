@@ -23,7 +23,7 @@ export class StandingsService {
     public async getStandingsByCountryName(countryName: string): Promise<IStandingRecord[]> {
         return this.queryByIndex(0, countryName);
     }
-    public async getStandingsByLeaugeName(leagueName: string): Promise<IStandingRecord[]> {
+    public async getStandingsByLeagueName(leagueName: string): Promise<IStandingRecord[]> {
         return this.queryByIndex(1, leagueName);
     }
     public async getStandingsByTeamName(teamName: string): Promise<IStandingRecord[]> {

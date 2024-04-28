@@ -20,7 +20,7 @@ export class StandingsController {
         else if (filterCountryName !== undefined) {
             data = await this.service.getStandingsByCountryName(filterCountryName as string);
         } else if (filterLeagueName !== undefined) {
-            data = await this.service.getStandingsByLeaugeName(filterLeagueName as string);
+            data = await this.service.getStandingsByLeagueName(filterLeagueName as string);
         } else if (filterTeamName !== undefined) {
             data = await this.service.getStandingsByTeamName(filterTeamName as string);
         }
@@ -34,7 +34,7 @@ export class StandingsController {
 
         const page = data.slice(offset, offset + limit);
 
-        res.set(`Cache-Control', 'public, max-age=${this.appconfig.CacheDuration / 1000}`);
+        res.set(`Cache-Control`, `public, max-age=${this.appconfig.CacheDuration / 1000}`);
 
         res.status((offset + limit) < data.length ? 206 : 200)
             .send(page);

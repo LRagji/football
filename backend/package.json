@@ -10,7 +10,7 @@
     "start": "npm run build && node -r dotenv/config dist/src/index.js ./.env",
     "test": "npm run build && node --test ./dist/test",
     "docker-local": "docker build -f ./Dockerfile -t football-backend:local .",
-    "coverage": "nyc --all --reporter=lcov --reporter=text npm run test"
+    "coverage": "nyc --all --reporter=lcov --reporter=text --exclude=src/index.ts --exclude=test/** --exclude=coverage/** npm run test"
   },
   "author": "",
   "license": "ISC",

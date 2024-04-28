@@ -28,7 +28,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/backend/test/searchbale-table.test.ts",
+            "program": "${workspaceFolder}/backend/test/standings-service.test.ts",
             "preLaunchTask": "npm: build - backend",
             "outFiles": [
                 "${workspaceFolder}/backend/dist/test/**/*.js"
