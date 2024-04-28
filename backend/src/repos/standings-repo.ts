@@ -9,7 +9,7 @@ export class StandingsRepo {
 
     private readonly apiWatchdogs = new Map<string, Promise<Response>>();
 
-    constructor(private readonly appConfig: IEnvConfig, private readonly logger: ILogger) { }
+    constructor(private readonly appConfig: IEnvConfig, private readonly logger: ILogger, private readonly apiFetch = fetch) { }
 
     public async fetchData<T extends MTeam | MLeague | MCountry | MStandings>(action: string, actionParamName?: string, actionParamValue?: string): Promise<T[]> {
 
@@ -22,7 +22,7 @@ export class StandingsRepo {
 
         let apiCall = this.apiWatchdogs.get(action)
         if (apiCall === undefined) {
-            apiCall = fetch(upstreamUrl);
+            apiCall = this.apiFetch(upstreamUrl);
             this.apiWatchdogs.set(action, apiCall);
         }
         let response: Response;
